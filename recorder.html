@@ -205,7 +205,14 @@
   var mr = null, stream = null, audioCtx = null, analyser = null;
   var chunks = [], blob = null;
   var sec = 0, timerIv = null, animId = null;
-  var isPaused = false;
+  var isPaused = false, sent = false;
+
+  window.addEventListener('beforeunload', function(e) {
+    if (blob && !sent) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 
   var canvas  = document.getElementById('wave');
   var ctx     = canvas.getContext('2d');
@@ -320,6 +327,7 @@
       showError('元のページとの接続が切れています。<br>元のページを再読み込みしてもう一度お試しください。');
       return;
     }
+    sent = true;
     document.getElementById('btnSend').disabled = true;
     document.getElementById('btnRedo').disabled = true;
     window.opener.postMessage({ type: 'gasRecording', blob: blob }, '*');
