@@ -306,11 +306,11 @@
     a.download = fname;
     a.click();
 
-    setStatus('done', '録音完了 — 再生して確認できます');
-    document.getElementById('btnSend').style.display = 'block';
-    document.getElementById('btnRedo').style.display = 'block';
-    document.getElementById('note').textContent = '内容を確認して「送る」を押してください。';
+    setStatus('done', '📨 元のページに送信中…');
     drawFlat();
+
+    // 自動送信して元のページに戻る
+    setTimeout(function() { sendBlob(); }, 400);
   }
 
   // ===== 送信 =====
