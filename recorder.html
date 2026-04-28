@@ -135,6 +135,10 @@
       width: 100%; background: #f1f5f9; color: #475569;
       border: 2px solid #e2e8f0; box-shadow: none; display: none;
     }
+    .btn-dl {
+      width: 100%; background: #f1f5f9; color: #0369a1;
+      border: 2px solid #bae6fd; box-shadow: none; display: none;
+    }
 
     /* ===== プレビュー ===== */
     audio {
@@ -188,8 +192,9 @@
   <!-- プレビュー -->
   <audio id="preview" controls></audio>
 
-  <!-- 送信・録り直し -->
+  <!-- 送信・ダウンロード・録り直し -->
   <button class="btn-send" id="btnSend" onclick="sendBlob()">✅ この録音を元のページに送る</button>
+  <button class="btn-dl"   id="btnDl"   onclick="downloadBlob()">💾 ダウンロード保存</button>
   <button class="btn-redo" id="btnRedo" onclick="redo()">🔄 録り直し</button>
 
   <!-- エラー -->
@@ -291,33 +296,37 @@
     drawFlat();
   }
 
+  function buildFileName() {
+    var now = new Date();
+    var pad = function(n) { return String(n).padStart(2, '0'); };
+    return 'recording_'
+      + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate())
+      + '_' + pad(now.getHours()) + pad(now.getMinutes()) + '.webm';
+  }
+
+  function downloadBlob() {
+    if (!blob) return;
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = buildFileName();
+    a.click();
+  }
+
   function onStop() {
     blob = new Blob(chunks, { type: 'audio/webm' });
     var preview = document.getElementById('preview');
     preview.src = URL.createObjectURL(blob);
     preview.style.display = 'block';
 
-    // ローカルに自動保存
-    var now = new Date();
-    var pad = function(n) { return String(n).padStart(2, '0'); };
-    var fname = 'recording_'
-      + now.getFullYear()
-      + pad(now.getMonth() + 1)
-      + pad(now.getDate())
-      + '_'
-      + pad(now.getHours())
-      + pad(now.getMinutes())
-      + '.webm';
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = fname;
-    a.click();
+    // 自動ダウンロード試行（ブラウザによってはブロックされる場合あり）
+    downloadBlob();
 
+    document.getElementById('btnDl').style.display = 'block';
     setStatus('done', '📨 元のページに送信中…');
     drawFlat();
 
     // 自動送信して元のページに戻る
-    setTimeout(function() { sendBlob(); }, 400);
+    setTimeout(function() { sendBlob(); }, 600);
   }
 
   // ===== 送信 =====
@@ -329,11 +338,13 @@
     }
     sent = true;
     document.getElementById('btnSend').disabled = true;
+    document.getElementById('btnDl').disabled   = true;
     document.getElementById('btnRedo').disabled = true;
     window.opener.postMessage({ type: 'gasRecording', blob: blob }, '*');
     setStatus('done', '📨 送信しました！');
-    document.getElementById('note').textContent = 'このタブを閉じてください。';
-    setTimeout(function() { window.close(); }, 1200);
+    document.getElementById('note').textContent = '元のページに戻ります…';
+    try { window.opener.focus(); } catch(e) {}
+    setTimeout(function() { window.close(); }, 800);
   }
 
   // ===== 録り直し =====
@@ -352,6 +363,7 @@
     document.getElementById('btnPause').textContent = '⏸ 一時停止';
     document.getElementById('btnStop').disabled  = true;
     document.getElementById('btnSend').style.display = 'none';
+    document.getElementById('btnDl').style.display   = 'none';
     document.getElementById('btnRedo').style.display = 'none';
     document.getElementById('waveMsg').style.display = '';
     document.getElementById('errBox').style.display  = 'none';
