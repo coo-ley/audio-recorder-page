@@ -290,6 +290,22 @@
     preview.src = URL.createObjectURL(blob);
     preview.style.display = 'block';
 
+    // ローカルに自動保存
+    var now = new Date();
+    var pad = function(n) { return String(n).padStart(2, '0'); };
+    var fname = 'recording_'
+      + now.getFullYear()
+      + pad(now.getMonth() + 1)
+      + pad(now.getDate())
+      + '_'
+      + pad(now.getHours())
+      + pad(now.getMinutes())
+      + '.webm';
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    a.click();
+
     setStatus('done', '録音完了 — 再生して確認できます');
     document.getElementById('btnSend').style.display = 'block';
     document.getElementById('btnRedo').style.display = 'block';
